@@ -1,0 +1,17 @@
+.title-page {
+    font-size: 24px;
+    font-weight: 600;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    position: relative;
+    &::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 4%, rgba(0, 212, 255, 1) 33%, rgba(0, 212, 255, 1) 89%);
+    }   
+
+}

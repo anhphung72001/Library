@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "controlling-esp32"
+  },
+  "targets": {
+    "controlling-esp32": {
+      "hosting": {
+        "code_user": [
+          "book-kiosk-user"
+        ],
+        "code_admin": [
+          "book-kiosk-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
