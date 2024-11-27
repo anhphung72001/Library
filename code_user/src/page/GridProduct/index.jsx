@@ -223,6 +223,7 @@ const GridBooks = () => {
                       style={{ height: "calc(100% - 45px)" }}
                     >
                       <img
+                        className="Out_of_stock"
                         src="https://t3.ftcdn.net/jpg/04/30/38/40/240_F_430384041_1G6UymaKYOJBE7wx5QmSHBeTJInkcQJT.jpg"
                         alt="Out of stock"
                       />

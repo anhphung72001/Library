@@ -1,7 +1,4 @@
-import {
-  CheckCircleOutlined,
-  UndoOutlined
-} from "@ant-design/icons";
+import { CheckCircleOutlined, UndoOutlined } from "@ant-design/icons";
 import { Button, Modal, Select, Space, Spin, Table, Tooltip } from "antd";
 import { onValue, ref, update } from "firebase/database";
 import { useEffect, useState } from "react";
@@ -11,11 +8,11 @@ import { database } from "../../firebase";
 const BorrowsManager = () => {
   const [loading, setLoading] = useState(false);
   const [listData, setListData] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState("");
 
   const columns = [
     {
-      title: "order",
+      title: "Order",
       dataIndex: "order",
       key: "order",
       align: "center",
@@ -129,9 +126,10 @@ const BorrowsManager = () => {
   };
 
   const filterListData = () => {
-    if(statusFilter !== '') return listData.filter(i => i.borrow_status === statusFilter) 
-    else return listData
-  }
+    if (statusFilter !== "")
+      return listData.filter((i) => i.borrow_status === statusFilter);
+    else return listData;
+  };
 
   useEffect(() => {
     const borrowsRef = ref(database, "borrows");
@@ -173,14 +171,23 @@ const BorrowsManager = () => {
         <div className="title-page">Borrows Manager</div>
         <div className="d-flex align-items-center">
           <div className="fw-600 mr-8">Borrow Status:</div>
-          <Select placeholder="Select Status" value={statusFilter} onChange={status => setStatusFilter(status)} style={{width: 300}}>
-          <Select.Option value="">All</Select.Option>
-          <Select.Option value="0">Borrowed</Select.Option>
-          <Select.Option value="1">Returned</Select.Option>
-        </Select>
+          <Select
+            placeholder="Select Status"
+            value={statusFilter}
+            onChange={(status) => setStatusFilter(status)}
+            style={{ width: 300 }}
+          >
+            <Select.Option value="">All</Select.Option>
+            <Select.Option value="0">Borrowed</Select.Option>
+            <Select.Option value="1">Returned</Select.Option>
+          </Select>
         </div>
         <Table
-          dataSource={statusFilter !== '' ? listData.filter(i => i.borrow_status === +statusFilter) : listData}
+          dataSource={
+            statusFilter !== ""
+              ? listData.filter((i) => i.borrow_status === +statusFilter)
+              : listData
+          }
           columns={columns}
           pagination={false}
           rowKey={"id"}

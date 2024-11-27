@@ -31,7 +31,7 @@ const UserManager = () => {
 
   const columns = [
     {
-      title: "order",
+      title: "Order",
       dataIndex: "order",
       key: "order",
       align: "center",

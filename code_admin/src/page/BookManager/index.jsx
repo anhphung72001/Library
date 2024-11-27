@@ -15,7 +15,7 @@ import {
   Spin,
   Table,
   Tooltip,
-  Upload
+  Upload,
 } from "antd";
 import { onValue, push, ref, remove, update } from "firebase/database";
 import moment from "moment";
@@ -33,7 +33,7 @@ const BookManager = () => {
 
   const columns = [
     {
-      title: "order",
+      title: "Order",
       dataIndex: "order",
       key: "order",
       align: "center",
@@ -141,7 +141,7 @@ const BookManager = () => {
     } else {
       setOpenModal(true);
       form.resetFields();
-      setFileUpload([])
+      setFileUpload([]);
     }
   };
 
@@ -150,18 +150,18 @@ const BookManager = () => {
     setLoading(true);
     if (openModal.isUpdate) {
       // Cập nhật thông tin book
-    let image = ''
-      if(fileUpload[0]?.originFileObj) {
-        image = await uploadFile(fileUpload[0].originFileObj)
+      let image = "";
+      if (fileUpload[0]?.originFileObj) {
+        image = await uploadFile(fileUpload[0].originFileObj);
       } else {
-        image = data.file[0]?.url || ''
+        image = data.file[0]?.url || "";
       }
       const tableRef = ref(database, `books/${openModal.id}`);
       update(tableRef, {
         title: data.title,
         // author: data.author,
         quantity: data.quantity,
-        image
+        image,
       });
       toast.success("Update book information success.");
       setLoading(false);
@@ -169,17 +169,17 @@ const BookManager = () => {
     } else {
       // Thêm thông tin book mới
       const tableRef = ref(database, "books");
-      const date_added = moment().format("YYYY-MM-DD")
-      let image = ''
-      if(fileUpload[0]?.originFileObj) {
-        image = await uploadFile(fileUpload[0].originFileObj)
+      const date_added = moment().format("YYYY-MM-DD");
+      let image = "";
+      if (fileUpload[0]?.originFileObj) {
+        image = await uploadFile(fileUpload[0].originFileObj);
       }
       push(tableRef, {
         title: data.title,
         // author: data.author,
         quantity: data.quantity,
         date_added,
-        image
+        image,
       });
       toast.success("Add book information success.");
       setLoading(false);
@@ -208,7 +208,7 @@ const BookManager = () => {
 
   //xử lý khi chọn file
   const handleUploadFile = async ({ file, fileList }) => {
-    setFileUpload(fileList)
+    setFileUpload(fileList);
   };
 
   return (
@@ -238,25 +238,25 @@ const BookManager = () => {
           onCancel={() => setOpenModal(false)}
         >
           <Spin spinning={loading}>
-          <Form
-            form={form}
-            name="book-manager"
-            layout="vertical"
-            autoComplete="off"
-          >
-            <Form.Item
-              label="Book Title"
-              name="title"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input book title!",
-                },
-              ]}
+            <Form
+              form={form}
+              name="book-manager"
+              layout="vertical"
+              autoComplete="off"
             >
-              <Input placeholder="Enter title" />
-            </Form.Item>
-            {/* <Form.Item
+              <Form.Item
+                label="Book Title"
+                name="title"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input book title!",
+                  },
+                ]}
+              >
+                <Input placeholder="Enter title" />
+              </Form.Item>
+              {/* <Form.Item
               label="Book Author"
               name="author"
               rules={[
@@ -268,69 +268,73 @@ const BookManager = () => {
             >
               <Input placeholder="Enter author" />
             </Form.Item> */}
-            <Form.Item
-              label="Quantity"
-              name="quantity"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input quantity!",
-                },
-              ]}
-            >
-              <InputNumber placeholder="Enter quantity" min={0} style={{width: "100%"}} />
-            </Form.Item>
-            <Form.Item
-              label="Image"
-              name="file"
-              valuePropName="fileList"
-              getValueFromEvent={e => {
-                if (Array.isArray(e)) {
-                  return e
-                }
-                return e?.fileList
-              }}
-              rules={[
-                () => ({
-                  validator(_, value) {
-                    if (!!value?.find(i => i?.size > 5 * 1024 * 1024)) {
-                      return Promise.reject(
-                        new Error("Dung lượng file tối đa 5MB"),
-                      )
-                    }
-                    return Promise.resolve()
+              <Form.Item
+                label="Quantity"
+                name="quantity"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input quantity!",
                   },
-                }),
-              ]}
-            >
-              <Upload
-                accept="image/*"
-                multiple={false}
-                maxCount={1}
-                beforeUpload={() => false}
-                listType="picture-card"
-                fileList={fileUpload}
-                onChange={handleUploadFile}
+                ]}
               >
-                <button
-                  style={{
-                    border: 0,
-                    background: "none",
-                  }}
-                  type="button"
+                <InputNumber
+                  placeholder="Enter quantity"
+                  min={0}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item
+                label="Image"
+                name="file"
+                valuePropName="fileList"
+                getValueFromEvent={(e) => {
+                  if (Array.isArray(e)) {
+                    return e;
+                  }
+                  return e?.fileList;
+                }}
+                rules={[
+                  () => ({
+                    validator(_, value) {
+                      if (!!value?.find((i) => i?.size > 5 * 1024 * 1024)) {
+                        return Promise.reject(
+                          new Error("Dung lượng file tối đa 5MB")
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <Upload
+                  accept="image/*"
+                  multiple={false}
+                  maxCount={1}
+                  beforeUpload={() => false}
+                  listType="picture-card"
+                  fileList={fileUpload}
+                  onChange={handleUploadFile}
                 >
-                  <PlusOutlined />
-                  <div
+                  <button
                     style={{
-                      marginTop: 8,
+                      border: 0,
+                      background: "none",
                     }}
+                    type="button"
                   >
-                    Upload
-                  </div>
-                </button>
-              </Upload>
-            </Form.Item>
-          </Form>
+                    <PlusOutlined />
+                    <div
+                      style={{
+                        marginTop: 8,
+                      }}
+                    >
+                      Upload
+                    </div>
+                  </button>
+                </Upload>
+              </Form.Item>
+            </Form>
           </Spin>
         </Modal>
       </Spin>

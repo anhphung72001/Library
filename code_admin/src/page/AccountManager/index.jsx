@@ -29,7 +29,7 @@ const AccountManager = () => {
 
   const columns = [
     {
-      title: "order",
+      title: "Order",
       dataIndex: "order",
       key: "order",
       align: "center",
@@ -169,7 +169,8 @@ const AccountManager = () => {
 
   const handleSave = async () => {
     const data = await form.validateFields();
-    if(listData.find(i => i.email === data.email)) return toast.warning("Email already in use!");
+    if (listData.find((i) => i.email === data.email))
+      return toast.warning("Email already in use!");
     setLoading(true);
     if (openModal.isUpdate) {
       // Cập nhật thông tin account
