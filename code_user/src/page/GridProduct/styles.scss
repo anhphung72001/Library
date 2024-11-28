@@ -34,8 +34,12 @@
         width: auto;
         object-fit: contain;
     }
-    .Out_of_stock{
+    .out_of_stock {
         width: 100%;
         object-fit: contain;
+    }
+    .ant-ribbon-wrapper {
+        height: calc(100% - 45px);
+        text-align: center;
     }
 }

@@ -63,13 +63,16 @@ function SideBar({ children }) {
       <Menu
         onClick={onClick}
         className="menu-app"
+        theme="dark"
         defaultSelectedKeys={["1"]}
         defaultOpenKeys={["sub1"]}
         selectedKeys={activeKey}
         mode="inline"
         items={items}
       />
-      <div className="wrap-page">{children}</div>
+      <div className="wrap-content">
+        <div className="wrap-page">{children}</div>
+      </div>
     </div>
   );
 }

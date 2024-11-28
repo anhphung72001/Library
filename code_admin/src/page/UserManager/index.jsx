@@ -180,25 +180,32 @@ const UserManager = () => {
   };
 
   const handleSave = async () => {
-    const data = await form.validateFields();
-    setLoading(true);
-    if (openModal.isUpdate) {
-      // Cập nhật thông tin user
-      const tableRef = ref(database, `users/${openModal.id}`);
-      update(tableRef, data);
-      toast.success("Update user information success.");
+    try {
+      const data = await form.validateFields();
+      setLoading(true);
+      if (openModal.isUpdate) {
+        // Cập nhật thông tin user
+        const tableRef = ref(database, `users/${openModal.id}`);
+        update(tableRef, data);
+        toast.success("Update user information success.");
+        setLoading(false);
+        setOpenModal(false);
+      } else {
+        // Thêm thông tin user mới
+        const tableRef = ref(database, "users");
+        if (listData?.find((i) => i.user_code === data.user_code)) {
+          return toast.warning("User code already exists!");
+        }
+        push(tableRef, {
+          ...data,
+          status: 0,
+        });
+        toast.success("Add user information success.");
+        setLoading(false);
+        setOpenModal(false);
+      }
+    } finally {
       setLoading(false);
-      setOpenModal(false);
-    } else {
-      // Thêm thông tin user mới
-      const tableRef = ref(database, "users");
-      push(tableRef, {
-        ...data,
-        status: 0,
-      });
-      toast.success("Add user information success.");
-      setLoading(false);
-      setOpenModal(false);
     }
   };
 

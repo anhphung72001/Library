@@ -1,4 +1,4 @@
-import { Button, Col, Row, Space } from "antd";
+import { Badge, Button, Col, Row, Space } from "antd";
 import {
   equalTo,
   get,
@@ -26,6 +26,7 @@ const GridBooks = () => {
     const savedList = localStorage.getItem("list-book");
     return savedList ? JSON.parse(savedList) : [];
   });
+  console.log("listBooks: ", listBooks);
 
   useEffect(() => {
     //Lấy ra danh sách book
@@ -60,7 +61,7 @@ const GridBooks = () => {
     const unsubscribe = onValue(tableRef, (snapshot) => {
       const respData = snapshot.val();
       const numberSelect = respData.key;
-      if (numberSelect === "0" || numberSelect === 0) {
+      if (numberSelect === 0) {
         resetBorrower();
         toast.success("Đăng xuất thành công.");
       } else if (numberSelect > 0) {
@@ -177,7 +178,7 @@ const GridBooks = () => {
   const addBorrowers = () => {
     const tableRef = ref(database, `borrowers`);
     update(tableRef, {
-      UID: "195 102 51 54",
+      UID: "222",
     });
   };
   const onClickNumber = (number) => {
@@ -191,41 +192,36 @@ const GridBooks = () => {
     <div className="d-flex justify-content-center align-items-center mt-20">
       <div className="section">
         <div className="grid-book">
-          <Space size={8}>
+          {/* <Space size={8}>
             <Button onClick={addBorrowers}> Add Borrows</Button>
             {listBTN.map((i) => (
               <Button key={i} onClick={() => onClickNumber(i)}>
                 {i}
               </Button>
             ))}
-          </Space>
+          </Space> */}
           <Row gutter={[16, 16]}>
             {listBooks.map((i, idx) => (
               <Col span={6} key={i.id}>
-                <div className="wrap-book"> 
+                <div className="wrap-book">
                   {i.quantity > 0 ? (
-                    <img src={i.image} alt="image" className="book-image" />
-                    // <div className="book-info">
-                    //   <div className="book-title fs-18 fw-600 max-line5">
-                    //     {i.title}
-                    //   </div>
-                    //   <div className="d-flex align-items-center justify-content-space-between w-100">
-                    //     <div className="book-author max-line1 ">{i.author}</div>
-                    //     <img src={i.image} alt="image" className="book-image" />
-                    //     <div className="book-quantity mr-4 fw-600">
-                    //       {i.quantity}
-                    //     </div>
-                    //   </div>
-                    // </div>
+                    <Badge.Ribbon text={`SL: ${i.quantity}`} color="blue">
+                      <img
+                        src={i.image}
+                        alt="image"
+                        className="book-image"
+                        style={{ height: "100%" }}
+                      />
+                    </Badge.Ribbon>
                   ) : (
                     <div
                       className="d-flex align-item-center justify-content-center"
                       style={{ height: "calc(100% - 45px)" }}
                     >
                       <img
-                        className="Out_of_stock"
                         src="https://t3.ftcdn.net/jpg/04/30/38/40/240_F_430384041_1G6UymaKYOJBE7wx5QmSHBeTJInkcQJT.jpg"
                         alt="Out of stock"
+                        className="out_of_stock"
                       />
                     </div>
                   )}
