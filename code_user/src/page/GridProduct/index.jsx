@@ -26,7 +26,6 @@ const GridBooks = () => {
     const savedList = localStorage.getItem("list-book");
     return savedList ? JSON.parse(savedList) : [];
   });
-  console.log("listBooks: ", listBooks);
 
   useEffect(() => {
     //Lấy ra danh sách book
@@ -61,10 +60,10 @@ const GridBooks = () => {
     const unsubscribe = onValue(tableRef, (snapshot) => {
       const respData = snapshot.val();
       const numberSelect = respData.key;
-      if (numberSelect === 0) {
+      if (numberSelect !== '' && +numberSelect === 0) {
         resetBorrower();
         toast.success("Đăng xuất thành công.");
-      } else if (numberSelect > 0) {
+      } else if (+numberSelect > 0) {
         const savedUser = localStorage.getItem("user-info")
           ? JSON.parse(localStorage.getItem("user-info"))
           : null;
@@ -92,7 +91,7 @@ const GridBooks = () => {
             update(booksRef, {
               quantity: bookSelect.quantity - 1,
             });
-            addBorrow(bookSelect.id, savedUser.id);
+            addBorrow(bookSelect, savedUser);
             //reset giá trị sau khi thực hiện xong các tác vụ
             setTimeout(() => {
               resetKeyBoard();
@@ -161,16 +160,17 @@ const GridBooks = () => {
     } catch {}
   };
 
-  const addBorrow = (book_id, user_id) => {
+  const addBorrow = (book, user) => {
     const borrowsRef = ref(database, "borrows");
-    const borrow_date = moment().format("YYYY-MM-DD");
+    const borrow_date = moment().format("YYYY-MM-DD HH:mm");
     const due_date = moment().add(70, "days").format("YYYY-MM-DD");
     const newBorrows = {
-      book_id: book_id,
+      book_title: book.title,
       borrow_date,
       borrow_status: 0,
       due_date,
-      user_id,
+      user_code: user.user_code,
+      user_name: user.user_name,
     };
     push(borrowsRef, newBorrows);
   };
@@ -178,7 +178,7 @@ const GridBooks = () => {
   const addBorrowers = () => {
     const tableRef = ref(database, `borrowers`);
     update(tableRef, {
-      UID: "222",
+      UID: "195 102 51 54",
     });
   };
   const onClickNumber = (number) => {

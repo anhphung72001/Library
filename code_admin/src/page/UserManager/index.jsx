@@ -1,8 +1,10 @@
 import {
   Button,
+  Col,
   Form,
   Input,
   Modal,
+  Row,
   Select,
   Space,
   Spin,
@@ -15,6 +17,7 @@ import {
   EditOutlined,
   LockOutlined,
   PlusCircleOutlined,
+  SearchOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
 import { onValue, push, ref, remove, update } from "firebase/database";
@@ -25,9 +28,19 @@ import "./styles.scss";
 
 const UserManager = () => {
   const [form] = Form.useForm();
+  const [formFilter] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [listData, setListData] = useState();
+  const [dataTable, setListDataTable] = useState([]);
+  const [conditions, setConditions] = useState({
+    status: "",
+    textSearch: "",
+  });
+  const [pagination, setPagination] = useState({
+    pageSize: 20,
+    currentPage: 1,
+  });
 
   const columns = [
     {
@@ -36,6 +49,13 @@ const UserManager = () => {
       key: "order",
       align: "center",
       width: 60,
+      render: (val, record, idx) => {
+        return (
+          <div className="text-center">
+            {idx + 1 + pagination.pageSize * (pagination.currentPage - 1)}
+          </div>
+        );
+      },
     },
     {
       title: "User Code",
@@ -208,8 +228,17 @@ const UserManager = () => {
       setLoading(false);
     }
   };
+  const handleFilter = async () => {
+    try {
+      const data = await formFilter.validateFields();
+      setConditions((pre) => ({ ...pre, ...data }));
+      setPagination((pre) => ({ ...pre, currentPage: 1 }));
+    } finally {
+    }
+  };
 
   useEffect(() => {
+    formFilter.setFieldsValue(conditions);
     //Lấy ra danh sách user
     const tableRef = ref(database, "users");
     setLoading(true);
@@ -219,7 +248,6 @@ const UserManager = () => {
         ? Object.keys(respData).map((key, idx) => ({
             id: key,
             ...respData[key],
-            order: idx + 1,
           }))
         : [];
       setListData(dataList);
@@ -228,12 +256,27 @@ const UserManager = () => {
     // Hủy theo dõi khi component bị unmount
     return () => unsubscribe(); // Dừng theo dõi khi component unmount
   }, []);
+  useEffect(() => {
+    if (!listData?.length) return setListDataTable([]);
+    console.log("conditions: ", conditions);
+    const dataFilter = listData.filter(
+      (i) =>
+        (i.user_code
+          ?.toLowerCase()
+          ?.includes(conditions?.textSearch?.toLowerCase()) ||
+          i.user_name
+            ?.toLowerCase()
+            .includes(conditions?.textSearch?.toLowerCase())) &&
+        (conditions.status === "" ? true : i.status === +conditions.status)
+    );
+    setListDataTable(dataFilter);
+  }, [conditions, listData]);
 
   return (
     <div>
       <Spin spinning={loading}>
-        <div className="title-page">User Manager</div>
-        <Space size={8} className="mb-16">
+        <div className="title-page d-flex justify-content-space-between">
+          User Manager{" "}
           <Button
             type="primary"
             icon={<PlusCircleOutlined />}
@@ -241,12 +284,65 @@ const UserManager = () => {
           >
             Add User
           </Button>
-        </Space>
+        </div>
+        <Form layout="horizontal" form={formFilter} defaultValue={conditions}>
+          <Row gutter={12}>
+            <Col span={14}>
+              <Form.Item label="User name/code" name="textSearch">
+                <Input
+                  placeholder="Enter user name or user code..."
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col span={7}>
+              <Form.Item label="Status" name="status">
+                <Select placeholder="Select Status">
+                  <Select.Option value="">All</Select.Option>
+                  <Select.Option value="0">Active</Select.Option>
+                  <Select.Option value="1">Inactive</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={3}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                className="w-100"
+                onClick={handleFilter}
+              >
+                Search
+              </Button>
+            </Col>
+          </Row>
+        </Form>
         <Table
-          dataSource={listData}
+          dataSource={dataTable}
           columns={columns}
-          pagination={false}
           rowKey={"id"}
+          pagination={{
+            hideOnSinglePage: dataTable?.length <= 20,
+            current: pagination?.currentPage,
+            pageSize: pagination?.pageSize,
+            total: dataTable?.length,
+            showSizeChanger: dataTable?.length > 20,
+            showTotal: (total) => (
+              <div>
+                Total: <b>{total}</b>
+              </div>
+            ),
+            onChange: (page, pageSize) => {
+              let currentPage = page;
+              if (pageSize !== pagination.pageSize) {
+                currentPage = 1;
+              }
+              setPagination({
+                ...pagination,
+                currentPage: currentPage,
+                pageSize: pageSize,
+              });
+            },
+          }}
         />
 
         <Modal

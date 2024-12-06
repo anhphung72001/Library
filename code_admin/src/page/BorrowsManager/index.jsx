@@ -1,14 +1,40 @@
-import { CheckCircleOutlined, UndoOutlined } from "@ant-design/icons";
-import { Button, Modal, Select, Space, Spin, Table, Tooltip } from "antd";
+import {
+  CheckCircleOutlined,
+  SearchOutlined,
+  UndoOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tooltip,
+} from "antd";
 import { onValue, ref, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { database } from "../../firebase";
 
 const BorrowsManager = () => {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [listData, setListData] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [dataTable, setListDataTable] = useState([]);
+  const [conditions, setConditions] = useState({
+    status: "",
+    searchUser: "",
+    searchBook: "",
+  });
+  const [pagination, setPagination] = useState({
+    pageSize: 20,
+    currentPage: 1,
+  });
 
   const columns = [
     {
@@ -17,27 +43,32 @@ const BorrowsManager = () => {
       key: "order",
       align: "center",
       width: 60,
+      render: (val, record, idx) => {
+        return (
+          <div className="text-center">
+            {idx + 1 + pagination.pageSize * (pagination.currentPage - 1)}
+          </div>
+        );
+      },
     },
     {
       title: "Borrower Code",
       dataIndex: "user_code",
       key: "user_code",
       width: 140,
-      render: (val, record) => record?.user?.user_code,
     },
     {
       title: "Borrower Name",
       dataIndex: "user_name",
       key: "user_name",
-      render: (val, record) => record?.user?.user_name,
     },
     {
       title: "Book title",
-      dataIndex: "user_name",
-      key: "user_name",
+      dataIndex: "book_title",
+      key: "book_title",
       render: (val, record) => (
-        <Tooltip title={record?.book?.title} mouseLeaveDelay={0}>
-          <div className="max-line2">{record?.book?.title}</div>
+        <Tooltip title={val} mouseLeaveDelay={0}>
+          <div className="max-line2">{val}</div>
         </Tooltip>
       ),
     },
@@ -45,13 +76,13 @@ const BorrowsManager = () => {
       title: "Borrow date",
       dataIndex: "borrow_date",
       key: "borrow_date",
-      width: 120,
+      width: 180,
     },
     {
       title: "Due date",
       dataIndex: "due_date",
       key: "due_date",
-      width: 120,
+      width: 130,
     },
     {
       title: "Borrow status",
@@ -125,71 +156,123 @@ const BorrowsManager = () => {
     });
   };
 
-  const filterListData = () => {
-    if (statusFilter !== "")
-      return listData.filter((i) => i.borrow_status === statusFilter);
-    else return listData;
+  const handleFilter = async () => {
+    try {
+      const data = await form.validateFields();
+      setConditions((pre) => ({ ...pre, ...data }));
+      setPagination((pre) => ({ ...pre, currentPage: 1 }));
+    } finally {
+    }
   };
 
-  useEffect(() => {
-    const borrowsRef = ref(database, "borrows");
-    setLoading(true);
-    // Lấy danh sách borrows
-    const unsubscribe = onValue(borrowsRef, (snapshot) => {
-      const borrowsData = snapshot.val();
-      if (borrowsData) {
-        const borrowList = Object.keys(borrowsData).map((key, idx) => ({
-          id: key,
-          ...borrowsData[key],
-          order: idx + 1,
-        }));
-        // Sau khi lấy borrows, truy xuất thêm users và books
-        borrowList.forEach((borrow) => {
-          const userRef = ref(database, `users/${borrow.user_id}`);
-          const bookRef = ref(database, `books/${borrow.book_id}`);
-
-          onValue(userRef, (userSnapshot) => {
-            borrow.user = userSnapshot.val();
-            setListData((prevBorrows) => [...prevBorrows]); // Cập nhật trạng thái sau khi lấy user
-          });
-
-          onValue(bookRef, (bookSnapshot) => {
-            borrow.book = bookSnapshot.val();
-            setListData((prevBorrows) => [...prevBorrows]); // Cập nhật trạng thái sau khi lấy book
-          });
-        });
-        setListData(borrowList);
-        setLoading(false);
-      }
+  const sortData = (list) => {
+    return list.sort((a, b) => {
+      const dateA = new Date(a.borrow_date);
+      const dateB = new Date(b.borrow_date);
+      return dateB - dateA;
     });
-    return () => unsubscribe(); // Dừng theo dõi khi giao diện được tải lên hoàn tất
+  };
+  useEffect(() => {
+    form.setFieldsValue(conditions);
+    //Lấy ra danh sách book
+    const tableRef = ref(database, "borrows");
+    setLoading(true);
+    const unsubscribe = onValue(tableRef, (snapshot) => {
+      const respData = snapshot.val();
+      const dataList = respData
+        ? Object.keys(respData).map((key, idx) => ({
+            id: key,
+            ...respData[key],
+          }))
+        : [];
+      setListData(sortData(dataList));
+      setLoading(false);
+    });
+    return () => unsubscribe(); // Dừng theo dõi khi giao diện được tải lên
   }, []);
+  useEffect(() => {
+    if (!listData?.length) return setListDataTable([]);
+    const dataFilter = listData.filter(
+      (i) =>
+        (i.user_code
+          ?.toLowerCase()
+          ?.includes(conditions?.searchUser?.toLowerCase()) ||
+          i.user_name
+            ?.toLowerCase()
+            ?.includes(conditions?.searchUser?.toLowerCase())) &&
+        i.book_title
+          ?.toLowerCase()
+          ?.includes(conditions?.searchBook?.toLowerCase()) &&
+        (conditions.status === ""
+          ? true
+          : i.borrow_status === +conditions.status)
+    );
+    setListDataTable(sortData(dataFilter));
+  }, [conditions, listData]);
 
   return (
     <div>
       <Spin spinning={loading}>
         <div className="title-page">Borrows Manager</div>
-        <div className="d-flex align-items-center">
-          <div className="fw-600 mr-8">Borrow Status:</div>
-          <Select
-            placeholder="Select Status"
-            value={statusFilter}
-            onChange={(status) => setStatusFilter(status)}
-            style={{ width: 300 }}
-          >
-            <Select.Option value="">All</Select.Option>
-            <Select.Option value="0">Borrowed</Select.Option>
-            <Select.Option value="1">Returned</Select.Option>
-          </Select>
-        </div>
+        <Form layout="horizontal" form={form} defaultValue={conditions}>
+          <Row gutter={12}>
+            <Col span={7}>
+              <Form.Item label="Book title" name="searchBook">
+                <Input placeholder="Enter book title..." />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="User name/code" name="searchUser">
+                <Input placeholder="Enter user name or user code..." />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item label="Borrow status" name="status">
+                <Select placeholder="Select Status">
+                  <Select.Option value="">All</Select.Option>
+                  <Select.Option value="0">Borrowed</Select.Option>
+                  <Select.Option value="1">Returned</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={3}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                className="w-100"
+                onClick={handleFilter}
+              >
+                Search
+              </Button>
+            </Col>
+          </Row>
+        </Form>
         <Table
-          dataSource={
-            statusFilter !== ""
-              ? listData.filter((i) => i.borrow_status === +statusFilter)
-              : listData
-          }
+          dataSource={dataTable}
           columns={columns}
-          pagination={false}
+          pagination={{
+            hideOnSinglePage: dataTable?.length <= 20,
+            current: pagination?.currentPage,
+            pageSize: pagination?.pageSize,
+            total: dataTable?.length,
+            showSizeChanger: dataTable?.length > 20,
+            showTotal: (total) => (
+              <div>
+                Total: <b>{total}</b>
+              </div>
+            ),
+            onChange: (page, pageSize) => {
+              let currentPage = page;
+              if (pageSize !== pagination.pageSize) {
+                currentPage = 1;
+              }
+              setPagination({
+                ...pagination,
+                currentPage: currentPage,
+                pageSize: pageSize,
+              });
+            },
+          }}
           rowKey={"id"}
         />
       </Spin>

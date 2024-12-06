@@ -123,6 +123,8 @@ const BookManager = () => {
   };
 
   const handleOpenModal = (record) => {
+    form.resetFields()
+    setFileUpload([]);
     if (record) {
       setOpenModal({
         ...record,
@@ -140,8 +142,6 @@ const BookManager = () => {
       });
     } else {
       setOpenModal(true);
-      form.resetFields();
-      setFileUpload([]);
     }
   };
 
@@ -214,8 +214,8 @@ const BookManager = () => {
   return (
     <div>
       <Spin spinning={loading}>
-        <div className="title-page">Book Manager</div>
-        <Space size={8} className="mb-16">
+        <div className="title-page d-flex justify-content-space-between">
+          Book Manager{" "}
           <Button
             type="primary"
             icon={<PlusCircleOutlined />}
@@ -223,7 +223,7 @@ const BookManager = () => {
           >
             Add Book
           </Button>
-        </Space>
+        </div>
         <Table
           dataSource={listData}
           columns={columns}

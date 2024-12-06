@@ -6,7 +6,7 @@ const STORAGE = {
 export const getStorage = (name) => {
   let data =
     typeof window !== "undefined" && name !== undefined
-      ? localStorage.getItem(name)
+      ? sessionStorage.getItem(name)
       : "";
   try {
     if (data) return JSON.parse(data);
@@ -17,15 +17,15 @@ export const getStorage = (name) => {
 
 export const setStorage = (name, value) => {
   const stringify = typeof value !== "string" ? JSON.stringify(value) : value;
-  return localStorage.setItem(name, stringify);
+  return sessionStorage.setItem(name, stringify);
 };
 
 export const deleteStorage = (name) => {
-  return localStorage.removeItem(name);
+  return sessionStorage.removeItem(name);
 };
 
 export const clearStorage = () => {
-  return localStorage.clear();
+  return sessionStorage.clear();
 };
 
 export default STORAGE;
