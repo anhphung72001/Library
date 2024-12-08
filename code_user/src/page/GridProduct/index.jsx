@@ -26,6 +26,7 @@ const GridBooks = () => {
     const savedList = localStorage.getItem("list-book");
     return savedList ? JSON.parse(savedList) : [];
   });
+  const [bookBorrowed, setBookBorrowed] = useState();
 
   useEffect(() => {
     //Lấy ra danh sách book
@@ -60,9 +61,9 @@ const GridBooks = () => {
     const unsubscribe = onValue(tableRef, (snapshot) => {
       const respData = snapshot.val();
       const numberSelect = respData.key;
-      if (numberSelect !== '' && +numberSelect === 0) {
+      if (numberSelect !== "" && +numberSelect === 0) {
         resetBorrower();
-        toast.success("Đăng xuất thành công.");
+        toast.success("Logout success.");
       } else if (+numberSelect > 0) {
         const savedUser = localStorage.getItem("user-info")
           ? JSON.parse(localStorage.getItem("user-info"))
@@ -73,12 +74,14 @@ const GridBooks = () => {
         if (savedUser && savedUser.id) {
           const bookSelect = listBook[numberSelect - 1]; // Lấy thông tin sách đc chọn
           if (!bookSelect) {
-            toast.warning("Sách không tồn tại!");
+            toast.warning("The book does not exist!");
             resetKeyBoard();
             return;
           }
-          if (!bookSelect?.quantity) {
-            toast.warning("Sách đã hết!");
+          if (!bookSelect?.status) {
+            toast.warning("The compartment is not available!");
+          } else if (!bookSelect?.quantity) {
+            toast.warning("The book is over!");
             resetKeyBoard();
           } else {
             //Cập nhật bảng selected_book
@@ -91,6 +94,9 @@ const GridBooks = () => {
             update(booksRef, {
               quantity: bookSelect.quantity - 1,
             });
+            toast.success(
+              `You have successfully borrowed books in compartment no. ${numberSelect}`
+            );
             addBorrow(bookSelect, savedUser);
             //reset giá trị sau khi thực hiện xong các tác vụ
             setTimeout(() => {
@@ -100,9 +106,42 @@ const GridBooks = () => {
           }
         } else {
           resetKeyBoard();
-          toast.error("Quẹt thẻ để mượn sách!");
+          toast.error("Low the card to borrow books!");
         }
       }
+    });
+    // Hủy theo dõi khi component bị unmount
+    return () => unsubscribe(); // Dừng theo dõi khi component unmount
+  }, []);
+  useEffect(() => {
+    //Kiểm tra xem máy trả ra sách ở khoang số mấy
+    const tableRef = ref(database, "book_borrowed");
+    const unsubscribe = onValue(tableRef, (snapshot) => {
+      const respData = snapshot.val();
+      const numberSelect = respData.key;
+      console.log("numberSelect: ", numberSelect);
+      if (!numberSelect) return;
+      const savedUser = localStorage.getItem("user-info")
+        ? JSON.parse(localStorage.getItem("user-info"))
+        : null;
+      const listBook = localStorage.getItem("list-book")
+        ? JSON.parse(localStorage.getItem("list-book"))
+        : null;
+      const bookSelect = listBook[numberSelect - 1]; // Lấy thông tin sách trả ra
+      console.log("bookSelect: ", bookSelect);
+      // Cập nhật số lượng mới
+      // const booksRef = ref(database, `books/${bookSelect.id}`);
+      // update(booksRef, {
+      //   quantity: bookSelect.quantity - 1,
+      // });
+      // toast.success(`You have successfully borrowed books in compartment no. ${numberSelect}`);
+      // addBorrow(bookSelect, savedUser);
+      // //reset giá trị sau khi thực hiện xong các tác vụ
+      // setTimeout(() => {
+      //   resetKeyBoard();
+      //   resetSelectedBook();
+      //   resetBookBorrowed();
+      // }, 1000);
     });
     // Hủy theo dõi khi component bị unmount
     return () => unsubscribe(); // Dừng theo dõi khi component unmount
@@ -111,6 +150,13 @@ const GridBooks = () => {
   const resetKeyBoard = () => {
     // reset giá trị key
     const tableRef = ref(database, `keyboard`);
+    update(tableRef, {
+      key: "",
+    });
+  };
+  const resetBookBorrowed = () => {
+    // reset giá trị book_index
+    const tableRef = ref(database, `book_borrowed`);
     update(tableRef, {
       key: "",
     });
@@ -152,9 +198,9 @@ const GridBooks = () => {
       if (!!studentData && studentData.status === 0) {
         localStorage.setItem("user-info", JSON.stringify(studentData));
         dispatch(changeUserInfo(studentData));
-        toast.success("Quẹt thẻ thành công.");
+        toast.success("Successful card swiping.");
       } else {
-        toast.error("Thẻ của bạn không được mượn sách!");
+        toast.error("Your card must not borrow books!");
         resetBorrower();
       }
     } catch {}
@@ -182,9 +228,17 @@ const GridBooks = () => {
     });
   };
   const onClickNumber = (number) => {
+    setBookBorrowed(number);
     const tableRef = ref(database, "keyboard");
     update(tableRef, {
       key: number,
+    });
+  };
+  const onBookBorrowed = () => {
+    if (!bookBorrowed) return;
+    const tableRef = ref(database, "book_borrowed");
+    update(tableRef, {
+      key: bookBorrowed,
     });
   };
 
@@ -194,6 +248,7 @@ const GridBooks = () => {
         <div className="grid-book">
           {/* <Space size={8}>
             <Button onClick={addBorrowers}> Add Borrows</Button>
+            <Button onClick={onBookBorrowed}> Book Borrowed</Button>
             {listBTN.map((i) => (
               <Button key={i} onClick={() => onClickNumber(i)}>
                 {i}
@@ -203,7 +258,9 @@ const GridBooks = () => {
           <Row gutter={[16, 16]}>
             {listBooks.map((i, idx) => (
               <Col span={6} key={i.id}>
-                <div className="wrap-book">
+                <div
+                  className={`wrap-book ${i.status === 1 ? "" : "inactive"}`}
+                >
                   {i.quantity > 0 ? (
                     <Badge.Ribbon text={`SL: ${i.quantity}`} color="blue">
                       <img

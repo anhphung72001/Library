@@ -11,6 +11,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Select,
   Space,
   Spin,
   Table,
@@ -71,6 +72,19 @@ const BookManager = () => {
       render: (val) => moment(val).format("YYYY-MM-DD"),
     },
     {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      align: "center",
+      render: (val) =>
+        !val ? (
+          <div style={{ color: "red" }}>Inactive</div>
+        ) : (
+          <div style={{ color: "green" }}>Active</div>
+        ),
+    },
+    {
       title: "Actions",
       dataIndex: "action",
       key: "action",
@@ -113,7 +127,7 @@ const BookManager = () => {
       okType: "danger",
       cancelText: "No",
       onOk() {
-        // Xóa người dùng bằng hàm remove()
+        // Xóa bằng hàm remove()
         const tableRef = ref(database, `books/${record.id}`);
         remove(tableRef);
         toast.success("Delete book information success.");
@@ -123,7 +137,7 @@ const BookManager = () => {
   };
 
   const handleOpenModal = (record) => {
-    form.resetFields()
+    form.resetFields();
     setFileUpload([]);
     if (record) {
       setOpenModal({
@@ -142,6 +156,9 @@ const BookManager = () => {
       });
     } else {
       setOpenModal(true);
+      form.setFieldsValue({
+        status: 1,
+      });
     }
   };
 
@@ -161,6 +178,7 @@ const BookManager = () => {
         title: data.title,
         // author: data.author,
         quantity: data.quantity,
+        status: data.status,
         image,
       });
       toast.success("Update book information success.");
@@ -178,6 +196,7 @@ const BookManager = () => {
         title: data.title,
         // author: data.author,
         quantity: data.quantity,
+        status: data.status,
         date_added,
         image,
       });
@@ -283,6 +302,21 @@ const BookManager = () => {
                   min={0}
                   style={{ width: "100%" }}
                 />
+              </Form.Item>
+              <Form.Item
+                label="Status"
+                name="status"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input status!",
+                  },
+                ]}
+              >
+                <Select placeholder="select status...">
+                  <Select.Option value={1}>Active</Select.Option>
+                  <Select.Option value={0}>Inactive</Select.Option>
+                </Select>
               </Form.Item>
               <Form.Item
                 label="Image"
